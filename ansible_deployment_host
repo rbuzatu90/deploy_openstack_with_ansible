@@ -1,0 +1,9 @@
+sudo apt-get install aptitude build-essential git ntp ntpdate openssh-server python-dev sudo -y
+sudo git clone -b stable/mitaka https://github.com/openstack/openstack-ansible.git /opt/openstack-ansible
+sudo cd /opt/openstack-ansible/
+sudo scripts/bootstrap-ansible.sh
+
+sudo cat << 'EOF' >> sudo /root/.ssh/id_rsa.pub 
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFAPhPtK3wqvIRXu8sl8TznIsOsSJURjzGvCON8Tu6PryuaS/KCUjQ6NCCjEhkvrCNM00f/g8Jd4BUBTqIJi/27ASHKLbSYmnfpt5vowh7oIkXA3D5x75KWUCZvb+AYb+HxFhcZ+V99AJshf0paxRe0gXZCuNqyhg5p5Dub8jrWHsLWpYZlQwmzYpPc+4n5VNcXu6Ujc4FAUcMf7yqrPczNqNokv0ad7Fg1E7N0Cd0hGPBQFhR4KdB+xvLP2UeGnsb1NLsOAyHTwTqYjyRSJJyLLdJKFT4kN+kp0A9F/1goT7r7F8Hh5CTAl52cf4vnvYZpA8gn+jsHKY/lckXkzWL r.buzatu90@gmail.com
+
+EOF

@@ -1,0 +1,83 @@
+---
+cidr_networks:
+#  container: 172.29.236.0/22
+#  tunnel: 172.29.240.0/22
+  container: 10.0.0.0/24
+  tunnel: 10.0.1.0/24
+
+used_ips:
+  - "10.0.0.10,10.0.0.11,10.0.0.12,10.0.0.13"
+  - "10.0.0.10,10.0.0.11,10.0.0.12,10.0.0.13"
+
+global_overrides:
+  internal_lb_vip_address: 10.0.0.10
+  # The external IP is quoted simply to ensure that the .aio file can be used as input
+  # dynamic inventory testing.
+  external_lb_vip_address: "{{ bootstrap_host_public_address | default(ansible_default_ipv4.address) }}"
+  tunnel_bridge: "br-vxlan"
+  management_bridge: "br-mgmt"
+  provider_networks:
+    - network:
+        container_bridge: "br-mgmt"
+        container_type: "veth"
+        container_interface: "eth1"
+        ip_from_q: "container"
+        type: "raw"
+        group_binds:
+          - all_containers
+          - hosts
+        is_container_address: true
+        is_ssh_address: true
+    - network:
+        container_bridge: "br-vxlan"
+        container_type: "veth"
+        container_interface: "eth10"
+        ip_from_q: "tunnel"
+        type: "vxlan"
+        range: "1:1000"
+        net_name: "vxlan"
+        group_binds:
+          - neutron_linuxbridge_agent
+    - network:
+        container_bridge: "br-vlan"
+        container_type: "veth"
+        container_interface: "eth12"
+        host_bind_override: "eth1"
+        type: "flat"
+        net_name: "flat"
+        group_binds:
+          - neutron_linuxbridge_agent
+
+shared-infra_hosts:
+  infra1:
+    # Rabbitmq, and galera are set to multiples to test clustering.
+    affinity:
+      galera_container: 1
+      rabbit_mq_container: 1
+    ip: 10.0.0.10
+
+os-infra_hosts:
+  infra1:
+    # Horizon is set to multiple to test clustering. This test only requires x2.
+    affinity:
+      horizon_container: 1
+    ip: 10.0.0.10
+
+identity_hosts:
+  infra1:
+    # Keystone is set to multiple to test clustering. This test only requires x2.
+    affinity:
+      keystone_container: 1
+    ip: 10.0.0.10
+
+compute_hosts:
+  compute1:
+    ip: 10.0.0.12
+
+log_hosts:
+  log1:
+    ip: 10.0.0.13 
+
+network_hosts:
+  net1:
+    ip: 10.0.0.11

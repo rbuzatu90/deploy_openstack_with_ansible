@@ -1,17 +1,37 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# All Vagrant configuration is done below. The "2" in Vagrant.configure
-# configures the configuration version (we support older styles for
-# backwards compatibility). Please don't change it unless you know what
-# you're doing.
+$ansible_host_script = <<EOF
+sudo echo "Start" > /root/status
+sudo apt-get update
+sudo apt-get install -y aptitude build-essential git ntp ntpdate openssh-server python-dev sudo python-minimal
+sudo git clone -b stable/mitaka https://github.com/openstack/openstack-ansible.git /opt/openstack-ansible
+sudo cd /opt/openstack-ansible/
+sudo scripts/bootstrap-ansible.sh
+cp -r /opt/openstack-ansible/etc/openstack_deploy/ /etc/openstack_deploy
+cp /vagrant/openstack_user_config.yml /etc/openstack_deploy/
+sudo echo "End" >> /root/status
+EOF
+
+$target_host_script = <<EOF
+sudo echo "Start" >> /root/status
+sudo apt-get update
+sudo apt-get install -y bridge-utils debootstrap ifenslave ifenslave-2.6 lsof lvm2 ntp ntpdate openssh-server sudo tcpdump vlan python-minimal
+sudo echo "End" >> /root/status
+EOF
+
+# Vagrant config
 Vagrant.configure("2") do |config|
 
   ### Default configs ###
 
   #config.vm.network "public_network"
+  config.ssh.username = "ubuntu"
+  config.ssh.keys_only = false
+  config.ssh.forward_agent = true
+  config.ssh.password = "baubau1"
   config.vm.provider "virtualbox" do |v, override|
-    override.vm.box = "ubuntu/trusty64"
+    override.vm.box = "UbuntuBase2"
     v.linked_clone = true
   end
 
@@ -19,7 +39,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "ansible" do |my_vm|
     my_vm.vm.hostname = 'ansible'
-    my_vm.vm.network "private_network", ip: "10.0.0.5" # Management
+    my_vm.vm.network "private_network", ip: "10.0.0.5" # Management net
+    my_vm.vm.provision "shell", inline: $ansible_host_script
     config.vm.provider :virtualbox do |vb|
       vb.memory = 1024
       vb.cpus = 2
@@ -31,6 +52,7 @@ Vagrant.configure("2") do |config|
     my_vm.vm.hostname = 'infra1'
     my_vm.vm.network "private_network", ip: "10.0.0.10" # Management
     my_vm.vm.network "private_network", ip: "10.0.1.10" # VXLan
+    my_vm.vm.provision "shell", inline: $target_host_script
     config.vm.provider :virtualbox do |vb|
       vb.memory = 2048
       vb.cpus = 2
@@ -42,6 +64,7 @@ Vagrant.configure("2") do |config|
     my_vm.vm.hostname = 'net1'
     my_vm.vm.network "private_network", ip: "10.0.0.11" # Management
     my_vm.vm.network "private_network", ip: "10.0.1.11" # VXLan
+    my_vm.vm.provision "shell", inline: $target_host_script
     config.vm.provider :virtualbox do |vb|
       vb.memory = 2048
       vb.cpus = 2
@@ -53,6 +76,7 @@ Vagrant.configure("2") do |config|
     my_vm.vm.hostname = 'compute1'
     my_vm.vm.network "private_network", ip: "10.0.0.12" # Management
     my_vm.vm.network "private_network", ip: "10.0.1.12" # VXLan
+    my_vm.vm.provision "shell", inline: $target_host_script
     config.vm.provider :virtualbox do |vb|
       vb.memory = 2048
       vb.cpus = 2
@@ -60,16 +84,17 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.define "log1" do |my_vm|
-    my_vm.vm.hostname = 'log1'
-    my_vm.vm.network "private_network", ip: "10.0.0.13" # Management
-    my_vm.vm.network "private_network", ip: "10.0.1.13" # VXLan
-    config.vm.provider :virtualbox do |vb|
-      vb.memory = 2048
-      vb.cpus = 2
-      vb.name = "log1"
-    end
-  end
+#  config.vm.define "log1" do |my_vm|
+#    my_vm.vm.hostname = 'log1'
+#    my_vm.vm.network "private_network", ip: "10.0.0.13" # Management
+#    my_vm.vm.network "private_network", ip: "10.0.1.13" # VXLan
+#    my_vm.vm.provision "shell", inline: $target_host_script
+#    config.vm.provider :virtualbox do |vb|
+#      vb.memory = 2048
+#      vb.cpus = 2
+#      vb.name = "log1"
+#    end
+#  end
 
 
 

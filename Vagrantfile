@@ -1,6 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Deployment host script - Ansible host
 $ansible_host_script = <<EOF
 sudo echo "Start" > /root/status
 sudo apt-get update
@@ -13,15 +14,29 @@ sudo cp /vagrant/openstack_user_config.yml /etc/openstack_deploy/
 echo "apply_security_hardening: true" >> /etc/openstack_deploy/user_variables.yml
 cd /opt/openstack-ansible/scripts
 sudo python pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
-sudo echo "End" >> /root/status
+cd /opt/openstack-ansible/playbooks
+sudo ansible-playbook setup-hosts.yml
 EOF
 
+# General host script
 $target_host_script = <<EOF
-sudo echo "Start" >> /root/status
 sudo apt-get update
 sudo apt-get install -y bridge-utils debootstrap ifenslave ifenslave-2.6 lsof lvm2 ntp ntpdate openssh-server sudo tcpdump vlan
 sudo brctl addbr br-mgmt
-sudo echo "End" >> /root/status
+sudo ifconfig br-mgmt up
+EOF
+
+
+# Net host script
+$net_host_script = <<EOF
+sudo apt-get update
+sudo apt-get install -y bridge-utils debootstrap ifenslave ifenslave-2.6 lsof lvm2 ntp ntpdate openssh-server sudo tcpdump vlan
+sudo brctl addbr br-mgmt
+sudo brctl addbr br-vlan
+sudo brctl addbr br-vxlan
+sudo ifconfig br-mgmt up
+sudo ifconfig br-vlan up
+sudo ifconfig br-vxlan up
 EOF
 
 # Vagrant config
@@ -39,18 +54,8 @@ Vagrant.configure("2") do |config|
     v.linked_clone = true
   end
 
-  ###  VMs configs ###
 
-  config.vm.define "ansible" do |my_vm|
-    my_vm.vm.hostname = 'ansible'
-    my_vm.vm.network "private_network", ip: "10.0.0.5" # Management net
-    my_vm.vm.provision "shell", inline: $ansible_host_script
-    config.vm.provider :virtualbox do |vb|
-      vb.memory = 1024
-      vb.cpus = 2
-      vb.name = "ansible"
-    end
-  end
+  ###  VMs configs ###
 
   config.vm.define "infra1" do |my_vm|
     my_vm.vm.hostname = 'infra1'
@@ -68,7 +73,7 @@ Vagrant.configure("2") do |config|
     my_vm.vm.hostname = 'net1'
     my_vm.vm.network "private_network", ip: "10.0.0.11" # Management
     my_vm.vm.network "private_network", ip: "10.0.1.11" # VXLan
-    my_vm.vm.provision "shell", inline: $target_host_script
+    my_vm.vm.provision "shell", inline: $net_host_script
     config.vm.provider :virtualbox do |vb|
       vb.memory = 2048
       vb.cpus = 2
@@ -87,19 +92,29 @@ Vagrant.configure("2") do |config|
       vb.name = "compute1"
     end
   end
+#
+#  config.vm.define "log1" do |my_vm|
+#    my_vm.vm.hostname = 'log1'
+#    my_vm.vm.network "private_network", ip: "10.0.0.13" # Management
+#    my_vm.vm.network "private_network", ip: "10.0.1.13" # VXLan
+#    my_vm.vm.provision "shell", inline: $target_host_script
+#    config.vm.provider :virtualbox do |vb|
+#      vb.memory = 2048
+#      vb.cpus = 2
+#      vb.name = "log1"
+#    end
+#  end
 
-  config.vm.define "log1" do |my_vm|
-    my_vm.vm.hostname = 'log1'
-    my_vm.vm.network "private_network", ip: "10.0.0.13" # Management
-    my_vm.vm.network "private_network", ip: "10.0.1.13" # VXLan
-    my_vm.vm.provision "shell", inline: $target_host_script
+  config.vm.define "ansible" do |my_vm|
+    my_vm.vm.hostname = 'ansible'
+    my_vm.vm.network "private_network", ip: "10.0.0.5" # Management net
+    my_vm.vm.provision "shell", inline: $ansible_host_script
     config.vm.provider :virtualbox do |vb|
-      vb.memory = 2048
+      vb.memory = 1024
       vb.cpus = 2
-      vb.name = "log1"
+      vb.name = "ansible"
     end
   end
-
 
 
 

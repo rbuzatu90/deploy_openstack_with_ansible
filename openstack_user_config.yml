@@ -74,10 +74,10 @@ compute_hosts:
   compute1:
     ip: 10.0.0.12
 
-log_hosts:
-  log1:
-    ip: 10.0.0.13 
-
 network_hosts:
   net1:
     ip: 10.0.0.11
+
+#log_hosts:
+#  log1:
+#    ip: 10.0.0.13 

@@ -4,24 +4,14 @@
 # Deployment host script - Ansible host
 $ansible_host_script = <<EOF
 sudo echo "Start" > /root/status
-sudo apt-get update
-sudo apt-get install -y aptitude build-essential git ntp ntpdate openssh-server python-dev sudo
-sudo git clone -b stable/mitaka https://github.com/openstack/openstack-ansible.git /opt/openstack-ansible
+sudo git clone -b stable/mitaka https://github.com/rbuzatu90/openstack-ansible.git /opt/openstack-ansible
 cd /opt/openstack-ansible/
 sudo scripts/bootstrap-ansible.sh
-sudo cp -r /opt/openstack-ansible/etc/openstack_deploy/ /etc/openstack_deploy
-sudo cp /vagrant/openstack_user_config.yml /etc/openstack_deploy/
-echo "apply_security_hardening: true" >> /etc/openstack_deploy/user_variables.yml
-cd /opt/openstack-ansible/scripts
-sudo python pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
-cd /opt/openstack-ansible/playbooks
-sudo ansible-playbook setup-hosts.yml
 EOF
 
-# General host script
+# Target host script
 $target_host_script = <<EOF
-sudo apt-get update
-sudo apt-get install -y bridge-utils debootstrap ifenslave ifenslave-2.6 lsof lvm2 ntp ntpdate openssh-server sudo tcpdump vlan
+wget -bqc http://monitor.info.uvt.ro/~r.buzatu90/rpc-trusty-container.tgz -O /root/rpc-trusty-container.tgz
 sudo brctl addbr br-mgmt
 sudo ifconfig br-mgmt up
 EOF
@@ -29,8 +19,7 @@ EOF
 
 # Net host script
 $net_host_script = <<EOF
-sudo apt-get update
-sudo apt-get install -y bridge-utils debootstrap ifenslave ifenslave-2.6 lsof lvm2 ntp ntpdate openssh-server sudo tcpdump vlan
+sudo wget -bqc http://monitor.info.uvt.ro/~r.buzatu90/rpc-trusty-container.tgz -O /root/rpc-trusty-container.tgz
 sudo brctl addbr br-mgmt
 sudo brctl addbr br-vlan
 sudo brctl addbr br-vxlan
@@ -50,7 +39,7 @@ Vagrant.configure("2") do |config|
   config.ssh.forward_agent = true
   config.ssh.password = "baubau1"
   config.vm.provider "virtualbox" do |v, override|
-    override.vm.box = "UbuntuTrustyBase"
+    override.vm.box = "UbuntuTrustyBase2"
     v.linked_clone = true
   end
 
@@ -81,17 +70,17 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.define "compute1" do |my_vm|
-    my_vm.vm.hostname = 'compute1'
-    my_vm.vm.network "private_network", ip: "10.0.0.12" # Management
-    my_vm.vm.network "private_network", ip: "10.0.1.12" # VXLan
-    my_vm.vm.provision "shell", inline: $target_host_script
-    config.vm.provider :virtualbox do |vb|
-      vb.memory = 2048
-      vb.cpus = 2
-      vb.name = "compute1"
-    end
-  end
+#  config.vm.define "compute1" do |my_vm|
+#    my_vm.vm.hostname = 'compute1'
+#    my_vm.vm.network "private_network", ip: "10.0.0.12" # Management
+#    my_vm.vm.network "private_network", ip: "10.0.1.12" # VXLan
+#    my_vm.vm.provision "shell", inline: $target_host_script
+#    config.vm.provider :virtualbox do |vb|
+#      vb.memory = 2048
+#      vb.cpus = 2
+#      vb.name = "compute1"
+#    end
+#  end
 #
 #  config.vm.define "log1" do |my_vm|
 #    my_vm.vm.hostname = 'log1'

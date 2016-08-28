@@ -6,10 +6,10 @@ How to deploy OpenStack using Ansible playbooks
 Requirements:
 ===================
 
-1. VirtualBox
+* VirtualBox
 For virtual machines where components will be deployd
 
-2. Vagrant
+* Vagrant
 For fast, easy and reproducible environment
 
 How it works:
